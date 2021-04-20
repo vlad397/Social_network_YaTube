@@ -9,7 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import Page, Paginator
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Comment, Follow, Group, Post
+from posts.models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -191,39 +191,16 @@ class ViewsTests(TestCase):
         response_3 = self.authorized_client.get(reverse('index'))
         self.assertNotEqual(response_2.content, response_3.content)
 
-    def test_add_comment_guest(self):
-        """Гость не может комментировать посты"""
-        comment = Comment.objects.count()
-        form_data = {
-            'text': 'Коммент',
-        }
-        self.guest_client.post(reverse(
-            'post',
-            kwargs={'username': self.user, 'post_id': ViewsTests.post.pk}),
-            data=form_data)
-        comment1 = Comment.objects.count()
-        self.assertEqual(comment, comment1)
-
-    def test_add_comment_authorized(self):
-        """Авторизованный пользователь может комментировать посты"""
-        form_data = {
-            'text': 'Коммент',
-        }
-        response = self.authorized_client.post(reverse(
-            'add_comment',
-            kwargs={'username': self.user, 'post_id': ViewsTests.post.pk}),
-            data=form_data)
-        self.assertEqual(response.status_code, 302)
-
-    def test_follow_unfollow_authorized(self):
-        """Авторизованный пользователь может подписываться и отписываться"""
-        # Follow
+    def test_follow_authorized(self):
+        """Авторизованный пользователь может подписываться"""
         self.authorized_client_2.get(reverse(
             'profile_follow',
             kwargs={'username': self.user}))
         exist = Follow.objects.filter(user=self.user_2).exists()
         self.assertTrue(exist)
-        # Unfollow
+
+    def test_unfollow_authorized(self):
+        """Авторизованный пользователь может отписываться"""
         self.authorized_client_2.get(reverse(
             'profile_unfollow',
             kwargs={'username': self.user}))
@@ -243,6 +220,17 @@ class ViewsTests(TestCase):
 
     def test_dont_show_unfollow_posts(self):
         """Посты без подписки не видны в избранном"""
+        user_3 = User.objects.create(username='somebody')
+        self.authorized_client_3 = Client()
+        self.authorized_client_3.force_login(user_3)
+        Post.objects.create(
+            text='ABC',
+            author=user_3,
+        )
+        self.authorized_client_2.get(reverse(
+            'profile_follow',
+            kwargs={'username': user_3}))
         response = self.authorized_client_2.get(reverse('follow_index'))
-        object = response.context.get('page')
-        self.assertEqual(str(object), '<Page 1 of 1>')
+        object = response.context.get('page').object_list
+        self.assertEqual(len(object), 1)
+        self.assertEqual(object[0].text, 'ABC')

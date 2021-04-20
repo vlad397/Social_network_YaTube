@@ -109,7 +109,7 @@ def add_comment(request, username, post_id):
         comment = form.save(commit=False)
         comment.author = request.user
         comment.post = post
-        form.save()
+        comment.save()
     return redirect('post', username=username, post_id=post_id)
 
 
@@ -141,7 +141,7 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     if request.user != author:
         Follow.objects.get_or_create(author=author, user=request.user)
     return redirect('profile', username=username)
@@ -149,7 +149,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = User.objects.get(username=username)
-    user = request.user
-    Follow.objects.filter(author=author, user=user).delete()
+    author = get_object_or_404(User, username=username)
+    Follow.objects.filter(author=author, user=request.user).delete()
     return redirect('profile', username=username)

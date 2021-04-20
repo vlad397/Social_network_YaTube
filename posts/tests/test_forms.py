@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
-from posts.models import Group, Post
+from posts.models import Comment, Group, Post
 
 User = get_user_model()
 
@@ -78,3 +78,27 @@ class FormsTests(TestCase):
             data=form_fields)
         self.post.refresh_from_db()
         self.assertEqual(self.post.text, 'Новый текст')
+
+    def test_add_comment_guest(self):
+        """Гость не может комментировать посты"""
+        comment = Comment.objects.count()
+        form_data = {
+            'text': 'Коммент',
+        }
+        self.guest_client.post(reverse(
+            'post',
+            kwargs={'username': self.user, 'post_id': FormsTests.post.pk}),
+            data=form_data)
+        comment1 = Comment.objects.count()
+        self.assertEqual(comment, comment1)
+
+    def test_add_comment_authorized(self):
+        """Авторизованный пользователь может комментировать посты"""
+        form_data = {
+            'text': 'Коммент',
+        }
+        response = self.authorized_client.post(reverse(
+            'add_comment',
+            kwargs={'username': self.user, 'post_id': FormsTests.post.pk}),
+            data=form_data)
+        self.assertEqual(response.status_code, 302)
