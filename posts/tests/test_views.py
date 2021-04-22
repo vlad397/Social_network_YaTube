@@ -9,6 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.paginator import Page, Paginator
 from django.test import Client, TestCase
 from django.urls import reverse
+
 from posts.models import Follow, Group, Post
 
 User = get_user_model()
@@ -194,24 +195,30 @@ class ViewsTests(TestCase):
     def test_follow_authorized(self):
         """Авторизованный пользователь может подписываться"""
         self.authorized_client_2.get(reverse(
+            'profile_unfollow',
+            kwargs={'username': self.user}))
+        self.authorized_client_2.get(reverse(
             'profile_follow',
             kwargs={'username': self.user}))
-        exist = Follow.objects.filter(user=self.user_2).exists()
+        exist = Follow.objects.filter(user=self.user_2,
+                                      author=self.user).exists()
         self.assertTrue(exist)
 
     def test_unfollow_authorized(self):
         """Авторизованный пользователь может отписываться"""
         self.authorized_client_2.get(reverse(
+            'profile_follow',
+            kwargs={'username': self.user}))
+        self.authorized_client_2.get(reverse(
             'profile_unfollow',
             kwargs={'username': self.user}))
-        not_exist = Follow.objects.filter(user=self.user_2).exists()
+        not_exist = Follow.objects.filter(user=self.user_2,
+                                          author=self.user).exists()
         self.assertFalse(not_exist)
 
     def test_show_follow_posts(self):
         """Посты подписки видны в избранном"""
-        self.authorized_client_2.get(reverse(
-            'profile_follow',
-            kwargs={'username': self.user}))
+        Follow.objects.create(user=self.user_2, author=self.user)
         response = self.authorized_client_2.get(reverse('follow_index'))
         obj_list = Post.objects.order_by('-pub_date').all()[:10]
         expected_object_list = list(obj_list)
@@ -227,9 +234,7 @@ class ViewsTests(TestCase):
             text='ABC',
             author=user_3,
         )
-        self.authorized_client_2.get(reverse(
-            'profile_follow',
-            kwargs={'username': user_3}))
+        Follow.objects.create(user=self.user_2, author=user_3)
         response = self.authorized_client_2.get(reverse('follow_index'))
         object = response.context.get('page').object_list
         self.assertEqual(len(object), 1)

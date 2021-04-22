@@ -5,41 +5,37 @@
 
 <main role="main" class="container">
     <div class="row">
-            <div class="col-md-3 mb-3 mt-1">
-                    <div class="card">
-                        {% include "posts/follow_and_author_info.html" %}
-                                    <li class="list-group-item">
-                                        {% if user.is_authenticated %}
-                                        {% if author != request.user %}
-                                        {% if following %}
-                                        <a class="btn btn-lg btn-light" 
-                                                href="{% url 'profile_unfollow' author.username %}" role="button"> 
-                                                Отписаться 
-                                        </a> 
-                                        {% else %}
-                                        <a class="btn btn-lg btn-primary" 
-                                                href="{% url 'profile_follow' author.username %}" role="button">
-                                                Подписаться 
-                                        </a>
-                                        {% endif %}
-                                        {% endif %}
-                                        {% endif %}
-                                    </li> 
-                            </ul>
-                    </div>
+        <div class="col-md-3 mb-3 mt-1">
+            <div class="card">
+                {% include "posts/follow_and_author_info.html" %}
+                {% if user.is_authenticated and author != request.user %}
+                    <li class="list-group-item">
+                        {% if following %}
+                        <a class="btn btn-lg btn-light" 
+                            href="{% url 'profile_unfollow' author.username %}" role="button"> 
+                                Отписаться 
+                        </a> 
+                        {% else %}
+                        <a class="btn btn-lg btn-primary" 
+                            href="{% url 'profile_follow' author.username %}" role="button">
+                                Подписаться 
+                        </a>
+                        {% endif %}
+                    </li>
+                {% endif %}
             </div>
+        </div>
             <div class="col-md-9">
                 {% for post in page %}
                     <!-- Вот он, новый include! -->
                     {% include "posts/post_item.html" with post=post %}
                 {% endfor %}
-    </div>
+            </div>
 
         <!-- Вывод паджинатора -->
         {% if page.has_other_pages %}
             {% include "paginator.html" with items=page paginator=paginator%}
         {% endif %}
-     </div>
     </div>
 </main>
 {% endblock %}

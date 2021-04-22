@@ -23,9 +23,9 @@ admin.site.register(Group, GroupAdmin)
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ("pk", "author", "text", "pub_date")
+    list_display = ("pk", "author", "text")
     search_fields = ("author",)
-    list_filter = ("pub_date",)
+    list_filter = ("created",)
     empty_value_display = "-пусто-"
 
 

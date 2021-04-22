@@ -44,12 +44,10 @@ class Comment(models.Model):
                                related_name="comments")
     text = models.TextField(verbose_name='Текст',
                             help_text='Введите текст комментария')
-    pub_date = models.DateTimeField("date published",
-                                    auto_now_add=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta():
-        ordering = ["-pub_date"]
+        ordering = ["-created"]
 
 
 class Follow(models.Model):

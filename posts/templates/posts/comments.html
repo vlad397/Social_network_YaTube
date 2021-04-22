@@ -1,4 +1,3 @@
-<!-- Форма добавления комментария -->
 {% load user_filters %}
 
 {% if user.is_authenticated %}
@@ -19,12 +18,10 @@
 <!-- Комментарии -->
 {% for item in comments %}
 
-            <a href="{% url 'profile' item.author.username %}"
-               name="comment_{{ item.id }}">
-                {{ item.author.username }}
-            </a>
+    <a href="{% url 'profile' item.author.username %}"
+        name="comment_{{ item.id }}">
+        {{ item.author.username }}
+    </a>
 
-        <p>{{ item.text | linebreaksbr }}</p>
-    </div>
-</div>
+    <p>{{ item.text | linebreaksbr }}</p>
 {% endfor %} 
